@@ -2,9 +2,9 @@ import cv2
 import time,  math, numpy as np
 import HandTrackingModule as htm
 import pyautogui, autopy
-from ctypes import cast, POINTER
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+# from ctypes import cast, POINTER
+# from comtypes import CLSCTX_ALL
+# from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 wCam, hCam = 640, 480
 cap = cv2.VideoCapture(0)
@@ -15,21 +15,22 @@ pTime = 0
 
 detector = htm.handDetector(maxHands=1, detectionCon=0.85, trackCon=0.8)
 
-devices = AudioUtilities.GetSpeakers()
-interface = devices.Activate(
-    IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-volume = cast(interface, POINTER(IAudioEndpointVolume))
-volRange = volume.GetVolumeRange()   #(-63.5, 0.0, 0.5) min max
+# devices = AudioUtilities.GetSpeakers()
+# interface = devices.Activate(
+#     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+# volume = cast(interface, POINTER(IAudioEndpointVolume))
+# volRange = volume.GetVolumeRange()   #(-63.5, 0.0, 0.5) min max
 
-minVol = -63
-maxVol = volRange[1]
-print(volRange)
-hmin = 50
-hmax = 200
-volBar = 400
-volPer = 0
-vol = 0
-color = (0,215,255)
+# minVol = -63
+# maxVol = volRange[1]
+# print(volRange)
+
+# hmin = 50
+# hmax = 200
+# volBar = 400
+# volPer = 0
+# vol = 0
+# color = (0,215,255)
 
 tipIds = [4, 8, 12, 16, 20]
 mode = ''
@@ -73,7 +74,7 @@ while True:
         elif (fingers == [1, 1, 0, 0, 0] ) & (active == 0 ):
              mode = 'Volume'
              active = 1
-        elif (fingers == [1 ,1 , 1, 1, 1] ) & (active == 0 ):
+        elif (fingers == [1 ,1, 1, 1, 1] ) & (active == 0 ):
              mode = 'Cursor'
              active = 1
 
@@ -98,58 +99,61 @@ while True:
             elif fingers == [0, 0, 0, 0, 0]:
                 active = 0
                 mode = 'N'
+
 ################# Volume 👇👇👇####################
-    if mode == 'Volume':
-        active = 1
-       #print(mode)
-        putText(mode)
-        if len(lmList) != 0:
-            if fingers[-1] == 1:
-                active = 0
-                mode = 'N'
-                print(mode)
-
-            else:
-
-                 #   print(lmList[4], lmList[8])
-                    x1, y1 = lmList[4][1], lmList[4][2]
-                    x2, y2 = lmList[8][1], lmList[8][2]
-                    cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
-                    cv2.circle(img, (x1, y1), 10, color, cv2.FILLED)
-                    cv2.circle(img, (x2, y2), 10, color, cv2.FILLED)
-                    cv2.line(img, (x1, y1), (x2, y2), color, 3)
-                    cv2.circle(img, (cx, cy), 8, color, cv2.FILLED)
-
-                    length = math.hypot(x2 - x1, y2 - y1)
-                    # print(length)
-
-                    # hand Range 50-300
-                    # Volume Range -65 - 0
-                    vol = np.interp(length, [hmin, hmax], [minVol, maxVol])
-                    volBar = np.interp(vol, [minVol, maxVol], [400, 150])
-                    volPer = np.interp(vol, [minVol, maxVol], [0, 100])
-                    print(vol)
-                    volN = int(vol)
-                    if volN % 4 != 0:
-                        volN = volN - volN % 4
-                        if volN >= 0:
-                            volN = 0
-                        elif volN <= -64:
-                            volN = -64
-                        elif vol >= -11:
-                            volN = vol
-
-                #    print(int(length), volN)
-                    volume.SetMasterVolumeLevel(vol, None)
-                    if length < 50:
-                        cv2.circle(img, (cx, cy), 11, (0, 0, 255), cv2.FILLED)
-
-                    cv2.rectangle(img, (30, 150), (55, 400), (209, 206, 0), 3)
-                    cv2.rectangle(img, (30, int(volBar)), (55, 400), (215, 255, 127), cv2.FILLED)
-                    cv2.putText(img, f'{int(volPer)}%', (25, 430), cv2.FONT_HERSHEY_COMPLEX, 0.9, (209, 206, 0), 3)
+    # if mode == 'Volume':
+    #     active = 1
+    #    #print(mode)
+    #     putText(mode)
+    #     if len(lmList) != 0:
+    #         if fingers[-1] == 1:
+    #             active = 0
+    #             mode = 'N'
+    #             print(mode)
+    #
+    #         else:
+    #
+    #              #   print(lmList[4], lmList[8])
+    #                 x1, y1 = lmList[4][1], lmList[4][2]
+    #                 x2, y2 = lmList[8][1], lmList[8][2]
+    #                 cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+    #                 cv2.circle(img, (x1, y1), 10, color, cv2.FILLED)
+    #                 cv2.circle(img, (x2, y2), 10, color, cv2.FILLED)
+    #                 cv2.line(img, (x1, y1), (x2, y2), color, 3)
+    #                 cv2.circle(img, (cx, cy), 8, color, cv2.FILLED)
+    #
+    #                 length = math.hypot(x2 - x1, y2 - y1)
+    #                 # print(length)
+    #
+    #                 # hand Range 50-300
+    #                 # Volume Range -65 - 0
+    #                 vol = np.interp(length, [hmin, hmax], [minVol, maxVol])
+    #                 volBar = np.interp(vol, [minVol, maxVol], [400, 150])
+    #                 volPer = np.interp(vol, [minVol, maxVol], [0, 100])
+    #                 print(vol)
+    #                 volN = int(vol)
+    #                 if volN % 4 != 0:
+    #                     volN = volN - volN % 4
+    #                     if volN >= 0:
+    #                         volN = 0
+    #                     elif volN <= -64:
+    #                         volN = -64
+    #                     elif vol >= -11:
+    #                         volN = vol
+    #
+    #             #    print(int(length), volN)
+    #                 volume.SetMasterVolumeLevel(vol, None)
+    #                 if length < 50:
+    #                     cv2.circle(img, (cx, cy), 11, (0, 0, 255), cv2.FILLED)
+    #
+    #                 cv2.rectangle(img, (30, 150), (55, 400), (209, 206, 0), 3)
+    #                 cv2.rectangle(img, (30, int(volBar)), (55, 400), (215, 255, 127), cv2.FILLED)
+    #                 cv2.putText(img, f'{int(volPer)}%', (25, 430), cv2.FONT_HERSHEY_COMPLEX, 0.9, (209, 206, 0), 3)
 
 
 #######################################################################
+
+
     if mode == 'Cursor':
         active = 1
         #print(mode)
@@ -179,6 +183,7 @@ while True:
                 if fingers[0] == 0:
                     cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 0, 255), cv2.FILLED)  # thumb
                     pyautogui.click()
+                    # pyautogui.doubleClick()
 
     cTime = time.time()
     fps = 1/((cTime + 0.01)-pTime)
