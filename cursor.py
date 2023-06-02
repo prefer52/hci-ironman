@@ -164,7 +164,7 @@ while True:
         putText(mode)
         cv2.rectangle(img, (110, 20), (620, 350), (255, 255, 255), 3)
 
-        if fingers != ([0, 1, 0, 0, 0] or [0, 1, 1, 0, 0]): #thumb excluded
+        if fingers != [0, 1, 0, 0, 0] and fingers != [0, 1, 1, 0, 0]:  # thumb excluded
             active = 0
             mode = 'N'
             print(mode)
@@ -194,15 +194,12 @@ while True:
 
                     autopy.mouse.move(w - X, Y)
 
-
-                if fingers[1] == 1 and fingers[2] == 1:
-
-                    print("je")
+                if fingers[1] == 1 or fingers[2] == 1:
                     length, img, lineInfo = detector.findDistance(8, 12, img)
-
                     if length < 40:
                         cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
                         pyautogui.click()
+
 
 
     cTime = time.time()
