@@ -194,7 +194,7 @@ while True:
 
                     autopy.mouse.move(w - X, Y)
 
-                if fingers[1] == 1 or fingers[2] == 1:
+                if fingers[1] == 1 and fingers[2] == 1:
                     length, img, lineInfo = detector.findDistance(8, 12, img)
                     if length < 40:
                         cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
