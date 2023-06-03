@@ -18,7 +18,8 @@ frameR = 100
 # detectionicon은 노이즈에도 상관없이 얼마나 손을 잘 인식하나
 # trackCon은 얼마나 손의 움직임을 잘 추적하나
 # detectioncon과 trackcon은 크면 클수로 시스템 부하 증가
-detector = htm.handDetector(maxHands=1, detectionCon=0.85, trackCon=0.8)
+# 손 인식 떨림 방지를 위해 매개변수 값 조정 기존값 detectionCon = 0.85, trackCon = 0.8
+detector = htm.handDetector(maxHands=1, detectionCon=0.5, trackCon=0.5)
 
 # 스피커 장치에 대한 정보 가져옴
 devices = AudioUtilities.GetSpeakers()
