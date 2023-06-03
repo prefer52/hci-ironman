@@ -6,6 +6,8 @@ from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
+
+
 wCam, hCam = 640, 480
 cap = cv2.VideoCapture(0)
 cap.set(3,wCam) # 3은 width
@@ -46,6 +48,22 @@ click = False
 tipIds = [4, 8, 12, 16, 20]
 mode = ''
 active = 0
+w, h = autopy.screen.size()
+
+
+def calculate_location(x1, y1, lmList):
+    X = int(np.interp(x1, [frameR, wCam - frameR], [0, w]))
+    Y = int(np.interp(y1, [frameR - 50, hCam - frameR - 50], [0, h]))
+
+    cv2.circle(img, (lmList[8][1], lmList[8][2]), 7, (255, 255, 255), cv2.FILLED)
+    cv2.circle(img, (lmList[12][1], lmList[12][2]), 10, (0, 255, 0), cv2.FILLED)  # thumb
+
+    if X % 2 != 0:
+        X = X - X % 2
+    if Y % 2 != 0:
+        Y = Y - Y % 2
+
+    return X, Y
 
 # PyAutoGUI의 FAILSAFE 모드 비활성화, 기본적으로 마우스가 왼쪽 상단 모서리로 이동하여
 # 예기치 못한 오류를 방지하는 모드로 이를 비활성화하여 커서 이동x
@@ -88,13 +106,13 @@ while True:
       #  print(fingers)
         if (fingers == [0,0,0,0,0]) & (active == 0 ):
             mode='N'
-        elif (fingers == [0, 1, 0, 0, 0] or fingers == [0, 1, 1, 0, 0]) & (active == 0 ):
+        elif (fingers == [1, 1, 1, 1, 1] or fingers == [1, 0, 0, 0, 0]) & (active == 0):
             mode = 'Scroll'
             active = 1
         elif (fingers == [1, 1, 0, 0, 0] ) & (active == 0 ):
              mode = 'Volume'
              active = 1
-        elif (fingers == [1 ,1 , 1, 1, 1] ) & (active == 0 ):
+        elif (fingers == [0, 1, 0, 0, 0] or fingers == [0, 1, 1, 0, 0]) & (active == 0):
              mode = 'Cursor'
              active = 1
 
@@ -106,13 +124,13 @@ while True:
         # 스크롤 up down에서 up down에 씌울 하얀색 박스 생성
         cv2.rectangle(img, (200, 410), (245, 460), (255, 255, 255), cv2.FILLED)
         if len(lmList) != 0:
-            if fingers == [0,1,0,0,0]:
+            if fingers == [1, 1, 1, 1, 1]:
               #print('up')
               #time.sleep(0.1)
                 putText(mode = 'U', loc=(200, 455), color = (0, 255, 0))
                 pyautogui.scroll(100)
 
-            if fingers == [0,1,1,0,0]:
+            if fingers == [1, 0, 0, 0, 0]:
                 #print('down')
               #  time.sleep(0.1)
                 putText(mode = 'D', loc =  (200, 455), color = (0, 0, 255))
@@ -177,46 +195,54 @@ while True:
         # 커서 박스 크기, 위치 조정
         cv2.rectangle(img, (frameR, frameR - 50), (wCam - frameR, hCam - frameR - 50), (255, 255, 255), 3)
 
-        if fingers[1:] == [0,0,0,0]: #thumb excluded
+        if fingers != [0, 1, 0, 0, 0] and fingers != [0, 1, 1, 0, 0]:
             active = 0
             mode = 'N'
             print(mode)
         else:  # 박스 끝으로 손가락이 움직이면 화면 끝으로 움직이도록 수정함
             if len(lmList) != 0:
                 x1, y1 = lmList[8][1], lmList[8][2]
-                w, h = autopy.screen.size()
-                X = int(np.interp(x1, [frameR, wCam - frameR], [0, w]))
-                Y = int(np.interp(y1, [frameR - 50, hCam - frameR - 50], [0, h]))
-                cv2.circle(img, (lmList[8][1], lmList[8][2]), 7, (255, 255, 255), cv2.FILLED)
-                cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 255, 0), cv2.FILLED)  # thumb
 
-                # cv2.circle(img, (lmList[20][1], lmList[20][2]), 10, (0, 255, 0), cv2.FILLED) #새끼손가락
+                if fingers[1] == 1 and fingers[2] == 0:
 
-                if X % 2 != 0:
-                    X = X - X % 2
-                if Y % 2 != 0:
-                    Y = Y - Y % 2
-                print(w - X, Y)
-                # autopy.mouse.move(w-X,Y)
-                # 손가락이 박스 바깥으로 나가면 발생하던 out of range 에러 예외처리
-                try:
-                    autopy.mouse.move(X, Y)
-                except:
-                    if X > w - 1 and Y > h - 1:
-                        autopy.mouse.move(w - 1, h - 1)
-                    elif X > w - 1:
-                        autopy.mouse.move(w - 1, Y)
-                    elif Y > h - 1:
-                        autopy.mouse.move(X, h - 1)
+                    # X = int(np.interp(x1, [frameR, wCam - frameR], [0, w]))
+                    # Y = int(np.interp(y1, [frameR - 50, hCam - frameR - 50], [0, h]))
+                    # cv2.circle(img, (lmList[8][1], lmList[8][2]), 7, (255, 255, 255), cv2.FILLED)
+                    # cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 255, 0), cv2.FILLED)  # thumb
+
+                    # cv2.circle(img, (lmList[20][1], lmList[20][2]), 10, (0, 255, 0), cv2.FILLED) #새끼손가락
+
+                    # if X % 2 != 0:
+                    #     X = X - X % 2
+                    # if Y % 2 != 0:
+                    #     Y = Y - Y % 2
+
+                    X, Y = calculate_location(x1, y1, lmList)
+
+                    # autopy.mouse.move(w-X,Y)
+                    # 손가락이 박스 바깥으로 나가면 발생하던 out of range 에러 예외처리
+                    try:
+                        autopy.mouse.move(X, Y)
+                    except:
+                        if X > w - 1 and Y > h - 1:
+                            autopy.mouse.move(w - 1, h - 1)
+                        elif X > w - 1:
+                            autopy.mouse.move(w - 1, Y)
+                        elif Y > h - 1:
+                            autopy.mouse.move(X, h - 1)
                 
-                #  pyautogui.moveTo(X,Y)
-                if fingers[0] == 0:
-                    cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 0, 255), cv2.FILLED)  # thumb
-                    pyautogui.mouseDown()
-                    click = True
-                    putText('drag')
-                else:
-                    pyautogui.mouseUp()
+                    #  pyautogui.moveTo(X,Y)
+
+
+                if fingers[1] == 1 and fingers[2] == 1:
+                    length, img, lineInfo = detector.findDistance(8, 12, img)
+                    if length < 40:
+                        cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
+                        pyautogui.mouseDown()
+                        X, Y = calculate_location(x1, y1, lmList)
+                        autopy.mouse.move(X, Y)
+                    else:
+                        pyautogui.mouseUp()
                     
 
     cTime = time.time()
@@ -232,3 +258,4 @@ while True:
     def putText(mode,loc = (250, 450), color = (0, 255, 255)):
         cv2.putText(img, str(mode), loc, cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     3, color, 3)
+
