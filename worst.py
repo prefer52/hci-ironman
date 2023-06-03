@@ -1,51 +1,53 @@
-import cv2 as cv
+import cv2
 import numpy as np
-import os
 
 
 def detect(img, cascade):
     rects = cascade.detectMultiScale(img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30),
-                                     flags=cv.CASCADE_SCALE_IMAGE)
+                                     flags=cv2.CASCADE_SCALE_IMAGE)
     if len(rects) == 0:
         return []
     rects[:, 2:] += rects[:, :2]
     return rects
 
 
-
-def removeFaceArea(img, cascade):
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    gray = cv.equalizeHist(gray)
+# 그레이 스케일
+# 히스토그램 평활화
+# 얼굴 영역 추출
+# 얼굴 영역 제거
+def remove_face_area(img, cascade):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.equalizeHist(gray)
     rects = detect(gray, cascade)
 
     height, width = img.shape[:2]
 
     for x1, y1, x2, y2 in rects:
-        cv.rectangle(img, (x1 - 10, 0), (x2 + 10, height), (0, 0, 0), -1)
+        cv2.rectangle(img, (x1 - 10, 0), (x2 + 10, height), (0, 0, 0), -1)
 
     return img
 
 
 def make_mask_image(img_bgr):
-    img_hsv = cv.cvtColor(img_bgr, cv.COLOR_BGR2HSV)
+    img_hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
 
     # img_h,img_s,img_v = cv.split(img_hsv)
 
     low = (0, 30, 0)
     high = (15, 255, 255)
 
-    img_mask = cv.inRange(img_hsv, low, high)
+    img_mask = cv2.inRange(img_hsv, low, high)
     return img_mask
 
 
-def distanceBetweenTwoPoints(start, end):
+def distance_between_two_points(start, end):
     x1, y1 = start
     x2, y2 = end
 
     return int(np.sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2)))
 
 
-def calculateAngle(A, B):
+def calculate_angle(A, B):
     A_norm = np.linalg.norm(A)
     B_norm = np.linalg.norm(B)
     C = np.dot(A, B)
@@ -54,14 +56,14 @@ def calculateAngle(A, B):
     return angle
 
 
-def findMaxArea(contours):
+def find_max_area(contours):
     max_contour = None
     max_area = -1
 
     for contour in contours:
-        area = cv.contourArea(contour)
+        area = cv2.contourArea(contour)
 
-        x, y, w, h = cv.boundingRect(contour)
+        x, y, w, h = cv2.boundingRect(contour)
 
         if (w * h) * 0.4 > area:
             continue
@@ -79,30 +81,30 @@ def findMaxArea(contours):
     return max_area, max_contour
 
 
-def getFingerPosition(max_contour, img_result, debug):
+def get_finger_position(max_contour, img_result, debug):
     points1 = []
 
     # STEP 6-1
-    M = cv.moments(max_contour)
+    M = cv2.moments(max_contour)
 
     cx = int(M['m10'] / M['m00'])
     cy = int(M['m01'] / M['m00'])
 
-    max_contour = cv.approxPolyDP(max_contour, 0.02 * cv.arcLength(max_contour, True), True)
-    hull = cv.convexHull(max_contour)
+    max_contour = cv2.approxPolyDP(max_contour, 0.02 * cv2.arcLength(max_contour, True), True)
+    hull = cv2.convexHull(max_contour)
 
     for point in hull:
         if cy > point[0][1]:
             points1.append(tuple(point[0]))
 
     if debug:
-        cv.drawContours(img_result, [hull], 0, (0, 255, 0), 2)
+        cv2.drawContours(img_result, [hull], 0, (0, 255, 0), 2)
         for point in points1:
-            cv.circle(img_result, tuple(point), 15, [0, 0, 0], -1)
+            cv2.circle(img_result, tuple(point), 15, [0, 0, 0], -1)
 
     # STEP 6-2
-    hull = cv.convexHull(max_contour, returnPoints=False)
-    defects = cv.convexityDefects(max_contour, hull)
+    hull = cv2.convexHull(max_contour, returnPoints=False)
+    defects = cv2.convexityDefects(max_contour, hull)
 
     if defects is None:
         return -1, None
@@ -114,7 +116,7 @@ def getFingerPosition(max_contour, img_result, debug):
         end = tuple(max_contour[e][0])
         far = tuple(max_contour[f][0])
 
-        angle = calculateAngle(np.array(start) - np.array(far), np.array(end) - np.array(far))
+        angle = calculate_angle(np.array(start) - np.array(far), np.array(end) - np.array(far))
 
         if angle < 90:
             if start[1] < cy:
@@ -124,9 +126,9 @@ def getFingerPosition(max_contour, img_result, debug):
                 points2.append(end)
 
     if debug:
-        cv.drawContours(img_result, [max_contour], 0, (255, 0, 255), 2)
+        cv2.drawContours(img_result, [max_contour], 0, (255, 0, 255), 2)
         for point in points2:
-            cv.circle(img_result, tuple(point), 20, [0, 255, 0], 5)
+            cv2.circle(img_result, tuple(point), 20, [0, 255, 0], 5)
 
     # STEP 6-3
     points = points1 + points2
@@ -140,7 +142,7 @@ def getFingerPosition(max_contour, img_result, debug):
         for index, c0 in enumerate(max_contour):
             c0 = tuple(c0[0])
 
-            if p0 == c0 or distanceBetweenTwoPoints(p0, c0) < 20:
+            if p0 == c0 or distance_between_two_points(p0, c0) < 20:
                 i = index
                 break
 
@@ -162,7 +164,7 @@ def getFingerPosition(max_contour, img_result, debug):
             if isinstance(next, np.ndarray):
                 next = tuple(next.tolist())
 
-            angle = calculateAngle(np.array(pre) - np.array(p0), np.array(next) - np.array(p0))
+            angle = calculate_angle(np.array(pre) - np.array(p0), np.array(next) - np.array(p0))
 
             if angle < 90:
                 new_points.append(p0)
@@ -173,65 +175,71 @@ def getFingerPosition(max_contour, img_result, debug):
 def process(img_bgr, debug):
     img_result = img_bgr.copy()
 
-    # STEP 1
-    img_bgr = removeFaceArea(img_bgr, cascade)
+    # 1. 얼굴 영역 제거 : 손 역역만 추출하기 위해
+    img_bgr = remove_face_area(img_bgr, cascade)
 
-    # STEP 2
+    # 2. 손 영역을 인식하기 쉽게 hsv로 변환 후 이진화
     img_binary = make_mask_image(img_bgr)
+    cv2.imshow("hsv", img_binary)
 
-    # STEP 3
-    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (5, 5))
-    img_binary = cv.morphologyEx(img_binary, cv.MORPH_CLOSE, kernel, 1)
-    cv.imshow("Binary", img_binary)
+    # 3. close 연산을 수행하여 끊긴 부분 연결
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    img_binary = cv2.morphologyEx(img_binary, cv2.MORPH_CLOSE, kernel, 1)
+    cv2.imshow("Binary", img_binary)
 
-    # STEP 4
-    contours, hierarchy = cv.findContours(img_binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    # 4. findContours를 활용하여 손의 외곽선 검출
+    contours, hierarchy = cv2.findContours(img_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
 
     if debug:
         for cnt in contours:
-            cv.drawContours(img_result, [cnt], 0, (255, 0, 0), 3)
+            cv2.drawContours(img_result, [cnt], 0, (255, 0, 0), 3)
 
-            # STEP 5
-    max_area, max_contour = findMaxArea(contours)
+
+    # 5. 검출된 외곽선 영역 중 가장 큰 영역을 찾음. - 얼굴 제외 했기 때문에 손이 검출됨
+    max_area, max_contour = find_max_area(contours)
 
     if max_area == -1:
         return img_result
 
     if debug:
-        cv.drawContours(img_result, [max_contour], 0, (0, 0, 255), 3)
+        cv2.drawContours(img_result, [max_contour], 0, (0, 0, 255), 3)
 
-        # STEP 6
-    ret, points = getFingerPosition(max_contour, img_result, debug)
 
-    # STEP 7
+
+    # 6. 외각선에 대해 convex hull을 계산하여 선의 방향이 바뀌는 부분을 손가락 후보로 설정함
+    # Convex hull은 초록색 선, 검은 색 원은 손가락 후보임
+    # 손 가락이 하나여도 검출이 된다.
+    # -> 단점은 손가락을 모두 구부려도 convex hull에서 외각선이 바뀌는 부분을 검출하기 때문에
+    # 손가락이 아닌 부분에 대해서도 손가락 후보로 설정된다.
+    ret, points = get_finger_position(max_contour, img_result, debug)
+
+
+    # 7. 손으로 지정된 부분에 대해서 포인트 출력해준다.
     if ret > 0 and len(points) > 0:
         for point in points:
-            cv.circle(img_result, point, 20, [255, 0, 255], 5)
+            cv2.circle(img_result, point, 10, (255, 0, 255), cv2.FILLED)
 
     return img_result
 
 
-current_file_path = os.path.dirname(os.path.realpath(__file__))
-cascade = cv.CascadeClassifier("haarcascade_hand.xml")
-
-# cap = cv.VideoCapture('test.avi')
-
-cap = cv.VideoCapture(0)
+cascade = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
+cap = cv2.VideoCapture(0)
 
 while True:
 
-    ret, img_bgr = cap.read()
+    ret, img = cap.read()
 
     if ret == False:
         break
 
-    img_result = process(img_bgr, debug=False)
+    img_result = process(img, debug=False)
 
-    key = cv.waitKey(1)
+    key = cv2.waitKey(1)
     if key == 27:
         break
 
-    cv.imshow("Result", img_result)
+    cv2.imshow("Result", img_result)
 
 cap.release()
-cv.destroyAllWindows()
+cv2.destroyAllWindows()
