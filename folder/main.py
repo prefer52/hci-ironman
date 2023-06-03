@@ -174,6 +174,8 @@ while True:
                 cv2.circle(img, (lmList[8][1], lmList[8][2]), 7, (255, 255, 255), cv2.FILLED)
                 cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 255, 0), cv2.FILLED)  #thumb
 
+                #cv2.circle(img, (lmList[20][1], lmList[20][2]), 10, (0, 255, 0), cv2.FILLED) #새끼손가락
+
                 if X%2 !=0:
                     X = X - X%2
                 if Y%2 !=0:
@@ -196,6 +198,11 @@ while True:
                     cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 0, 255), cv2.FILLED)  # thumb
                     pyautogui.click()
                     print("click")
+                # 새끼손가락 접으면 우클릭
+                # if fingers[4] == 0:
+                #     cv2.circle(img, (lmList[20][1], lmList[20][2]), 10, (0, 0, 255), cv2.FILLED)  # 새끼손가락
+                #     pyautogui.click(button='right')
+                #     print("click")
 
     cTime = time.time()
     fps = 1/((cTime + 0.01)-pTime)
