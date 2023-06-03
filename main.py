@@ -38,6 +38,7 @@ volBar = 400
 volPer = 0
 vol = 0
 color = (0,215,255)
+click = False
 
 # 손가락 끝마디, 0행부터 엄지 검지 중지 약지 소지
 tipIds = [4, 8, 12, 16, 20]
@@ -192,10 +193,16 @@ while True:
                     Y = Y - Y%2
                 print(X,Y)
                 autopy.mouse.move(X,Y)
-              #  pyautogui.moveTo(X,Y)
+                
+                #  pyautogui.moveTo(X,Y)
                 if fingers[0] == 0:
                     cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 0, 255), cv2.FILLED)  # thumb
-                    pyautogui.click()
+                    pyautogui.mouseDown()
+                    click = True
+                    putText('drag')
+                else:
+                    pyautogui.mouseUp()
+                    
 
     cTime = time.time()
     fps = 1/((cTime + 0.01)-pTime)
