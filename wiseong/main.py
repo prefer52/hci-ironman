@@ -13,7 +13,6 @@ cap.set(4,hCam)
 pTime = 0
 #cTime = 0
 
-
 detector = htm.handDetector(maxHands=1, detectionCon=0.85, trackCon=0.8)
 
 # devices = AudioUtilities.GetSpeakers()
@@ -36,15 +35,13 @@ detector = htm.handDetector(maxHands=1, detectionCon=0.85, trackCon=0.8)
 tipIds = [4, 8, 12, 16, 20]
 mode = ''
 active = 0
-w, h = autopy.screen.size()
 
 pyautogui.FAILSAFE = False
 while True:
     success, img = cap.read()
     img = detector.findHands(img)
-
-
-    lmList, bbox = detector.findPosition(img, draw=False)
+    cv2.flip(img, 1)
+    lmList = detector.findPosition(img, draw=False)
    # print(lmList)
     fingers = []
 
@@ -62,22 +59,26 @@ while True:
             else:
                 fingers.append(0)
 
-        for id in range(1, 5):
+        for id in range(1,5):
             if lmList[tipIds[id]][2] < lmList[tipIds[id] - 2][2]:
                 fingers.append(1)
             else:
                 fingers.append(0)
 
 
+      #  print(fingers)
         if (fingers == [0,0,0,0,0]) & (active == 0 ):
             mode='N'
-        elif (fingers == [1, 1, 1, 1, 1] or fingers == [1, 0, 0, 0, 0]) & (active == 0 ):
+        elif (fingers == [0, 1, 0, 0, 0] or fingers == [1, 0, 0, 0, 0]) & (active == 0 ):
             mode = 'Scroll'
             active = 1
-        # elif (fingers == [1, 1, 0, 0, 0] ) & (active == 0 ):
-        #      mode = 'Volume'
-        #      active = 1
-        elif (fingers == ([0 ,1, 0, 0, 0] or [0, 1, 1, 0, 0])) & (active == 0 ):
+        # elif (fingers == [0, 1, 0, 0, 0] or fingers == [0, 1, 1, 0, 0]) & (active == 0 ):
+        #     mode = 'Scroll'
+        #     active = 1
+        elif (fingers == [1, 1, 0, 0, 0] ) & (active == 0 ):
+             mode = 'Volume'
+             active = 1
+        elif (fingers == [1 ,1, 1, 1, 1] ) & (active == 0 ):
              mode = 'Cursor'
              active = 1
 
@@ -88,15 +89,15 @@ while True:
         putText(mode)
         cv2.rectangle(img, (200, 410), (245, 460), (255, 255, 255), cv2.FILLED)
         if len(lmList) != 0:
-            if fingers == [1, 1, 1, 1, 1]:
+            if fingers == [0,1,0,0,0]:
               #print('up')
-                time.sleep(0.01)
+              #time.sleep(0.1)
                 putText(mode = 'U', loc=(200, 455), color = (0, 255, 0))
                 pyautogui.scroll(100)
 
-            if fingers == [1, 0, 0, 0, 0]:
+            if fingers == [0,1,1,0,0]:
                 #print('down')
-                time.sleep(0.01)
+              #  time.sleep(0.1)
                 putText(mode = 'D', loc =  (200, 455), color = (0, 0, 255))
                 pyautogui.scroll(-100)
 
@@ -164,47 +165,44 @@ while True:
         putText(mode)
         cv2.rectangle(img, (110, 20), (620, 350), (255, 255, 255), 3)
 
-        if fingers != [0, 1, 0, 0, 0] and fingers != [0, 1, 1, 0, 0]:  # thumb excluded
-            active = 0
-            mode = 'N'
-            print(mode)
-        # if fingers == [0,0,1,0,0]: #thumb excluded
+        # if fingers[1:] == [0,0,0,0]: #thumb excluded
         #     active = 0
         #     mode = 'N'
         #     print(mode)
-
-
+        if fingers == [0,0,1,0,0]: #thumb excluded
+            active = 0
+            mode = 'N'
+            print(mode)
         else:
             if len(lmList) != 0:
                 x1, y1 = lmList[8][1], lmList[8][2]
+                w, h = autopy.screen.size()
+                X = int(np.interp(x1, [110, 620], [0, w - 1]))
+                Y = int(np.interp(y1, [20, 350], [0, h - 1]))
+                cv2.circle(img, (lmList[8][1], lmList[8][2]), 7, (255, 255, 255), cv2.FILLED)
+                cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 255, 0), cv2.FILLED)  #thumb
 
+                if X%2 !=0:
+                    X = X - X%2
+                if Y%2 !=0:
+                    Y = Y - Y%2
+                print(X,Y)
+                autopy.mouse.move(X, Y)
 
-                if fingers[1] == 1 and fingers[2] == 0:
-
-                    X = int(np.interp(x1, [110, 620], [0, w - 1]))
-                    Y = int(np.interp(y1, [20, 350], [0, h - 1]))
-
-                    cv2.circle(img, (lmList[8][1], lmList[8][2]), 7, (255, 255, 255), cv2.FILLED)
-                    cv2.circle(img, (lmList[12][1], lmList[12][2]), 10, (0, 255, 0), cv2.FILLED)  #thumb
-
-                    if X%2 !=0:
-                        X = X - X%2
-                    if Y%2 !=0:
-                        Y = Y - Y%2
-
-                    autopy.mouse.move(w - X, Y)
-
-                if fingers[1] == 1 and fingers[2] == 1:
-                    length, img, lineInfo = detector.findDistance(8, 12, img)
-                    if length < 40:
-                        cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
-                        pyautogui.click()
-
-
+                # 클릭 방식 변경 필요
+                if fingers[0] == 0:
+                    cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 0, 255), cv2.FILLED)
+                    pyautogui.click()
+                # if fingers[0] == 0:
+                #     cv2.circle(img, (lmList[4][1], lmList[4][2]), 10, (0, 0, 255), cv2.FILLED)  # thumb
+                #     # pyautogui.click()
+                #     pyautogui.click(button='left')
+                    # pyautogui.doubleClick()
 
     cTime = time.time()
     fps = 1/((cTime + 0.01)-pTime)
     pTime = cTime
+
     cv2.putText(img,f'FPS:{int(fps)}',(480,50), cv2.FONT_ITALIC,1,(255,0,0),2)
     cv2.imshow('Hand LiveFeed',img)
 
