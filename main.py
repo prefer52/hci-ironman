@@ -1,5 +1,5 @@
 import cv2
-import time,  math, numpy as np
+import math, numpy as np
 import HandTrackingModule as htm
 import pyautogui, autopy
 from ctypes import cast, POINTER
@@ -134,35 +134,21 @@ while True:
                 active = 0
                 mode = 'N'
             else:
-                x1, y1 = lmList[4][1], lmList[4][2]
-                x2, y2 = lmList[8][1], lmList[8][2]
-                cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
-                cv2.circle(img, (x1, y1), 10, color, cv2.FILLED)
-                cv2.circle(img, (x2, y2), 10, color, cv2.FILLED)
-                cv2.line(img, (x2, y2), (x1, y1), color, 3)
-                cv2.circle(img, (cx, cy), 8, color, cv2.FILLED)
-
-                length = math.hypot(x2 - x1, y2 - y1)
-
-                # hand Range 50-300
                 # Volume Range -65 - 0
-                vol = np.interp(length, [hmin, hmax], [minVol, maxVol])
+                if fingers == [1, 0, 0, 0, 0]:
+                    vol -= 1
+                    if vol < -65:
+                        vol = -65
+                elif fingers == [0, 1, 0, 0, 0]:
+                    vol += 1
+                    if vol > 0:
+                        vol = 0
+
                 # 딱히 필요 없는 코드
                 volBar = np.interp(vol, [minVol, maxVol], [400, 150])
                 volPer = np.interp(vol, [minVol, maxVol], [0, 100])
-                volN = int(vol)
-                if volN % 4 != 0:
-                    volN = volN - volN % 4
-                    if volN >= 0:
-                        volN = 0
-                    elif volN <= -64:
-                        volN = -64
-                    elif vol >= -11:
-                        volN = vol
 
                 volume.SetMasterVolumeLevel(vol, None)
-                if length < 50:
-                    cv2.circle(img, (cx, cy), 11, (0, 0, 255), cv2.FILLED)
 
                 cv2.rectangle(img, (30, 150), (55, 400), (209, 206, 0), 3)
                 cv2.rectangle(img, (30, int(volBar)), (55, 400), (215, 255, 127), cv2.FILLED)
@@ -205,12 +191,7 @@ while True:
                     else:
                         pyautogui.mouseUp()
                     
-
-    cTime = time.time()
-    fps = 1/((cTime + 0.01)-pTime)
-    pTime = cTime
-
-    cv2.putText(img,f'FPS:{int(fps)}',(480,50), cv2.FONT_ITALIC,1,(255,0,0),2)
+                    
     cv2.imshow('Hand LiveFeed',img)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -219,4 +200,3 @@ while True:
     def putText(mode,loc = (250, 450), color = (0, 255, 255)):
         cv2.putText(img, str(mode), loc, cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     3, color, 3)
-
