@@ -43,7 +43,9 @@ tipIds = [4, 8, 12, 16, 20]
 mode = ''
 active = 0
 w, h = autopy.screen.size()
-
+font_set = [cv2.FONT_HERSHEY_COMPLEX, cv2.FONT_HERSHEY_COMPLEX_SMALL, cv2.FONT_HERSHEY_DUPLEX,
+            cv2.FONT_HERSHEY_PLAIN, cv2.FONT_HERSHEY_SIMPLEX, cv2.FONT_HERSHEY_TRIPLEX]
+FONT  = font_set[2]
 
 def calculate_location(x1, y1, lmList):
     X = int(np.interp(x1, [frameR, wCam - frameR], [0, w]))
@@ -99,50 +101,50 @@ while True:
 
       #  print(fingers)
         if (fingers == [0,0,0,0,0]) & (active == 0 ):
-            mode='N'
+            mode='DEFAULT'
         elif (fingers == [1, 1, 1, 1, 1]) & (active == 0):
-            mode = 'Scroll'
+            mode = 'SCROLL'
             active = 1
         elif (fingers == [0, 1, 0, 0, 0] or fingers == [0, 1, 1, 0, 0]) & (active == 0):
-             mode = 'Cursor'
+             mode = 'CURSOR'
              active = 1
         elif (fingers == [1, 1, 0, 0, 0] ) & (active == 0 ):
-             mode = 'Volume'
+             mode = 'VOLUME'
              active = 1
 
-    if mode == 'Scroll':
+    if mode == 'SCROLL':
         active = 1
-        putText(mode)
         # 스크롤 up down에서 up down에 씌울 하얀색 박스 생성
-        cv2.rectangle(img, (200, 410), (245, 460), (255, 255, 255), cv2.FILLED)
         if len(lmList) != 0:
             if fingers == [1, 1, 1, 1, 1]:
-                putText(mode = 'U', loc=(200, 455), color = (0, 255, 0))
+                putText(mode + ' UP', loc = (140, 450))
                 pyautogui.scroll(100)
 
             if fingers == [1, 0, 0, 0, 0]:
-                putText(mode = 'D', loc =  (200, 455), color = (0, 0, 255))
+                putText(mode + ' DOWN', loc = (100, 450))
                 pyautogui.scroll(-100)
             elif fingers == [0, 0, 0, 0, 0]:
                 active = 0
-                mode = 'N'
+                mode = 'DEFAULT'
 
-    if mode == 'Volume':
+    if mode == 'VOLUME':
         active = 1
         if len(lmList) != 0:
             if fingers[-1] == 1:
                 active = 0
-                mode = 'N'
+                mode = 'DEFAULT'
             else:
                 # Volume Range -65 - 0
                 if fingers == [1, 0, 0, 0, 0]:
                     vol -= 1
                     if vol < -65:
                         vol = -65
+                    putText(mode + ' DOWN', loc = (100, 450))
                 elif fingers == [0, 1, 0, 0, 0]:
                     vol += 1
                     if vol > 0:
                         vol = 0
+                    putText(mode + ' UP', loc = (140, 450))
 
                 # 딱히 필요 없는 코드
                 volBar = np.interp(vol, [minVol, maxVol], [400, 150])
@@ -150,11 +152,11 @@ while True:
 
                 volume.SetMasterVolumeLevel(vol, None)
 
-                cv2.rectangle(img, (30, 150), (55, 400), (209, 206, 0), 3)
-                cv2.rectangle(img, (30, int(volBar)), (55, 400), (215, 255, 127), cv2.FILLED)
-                cv2.putText(img, f'{int(volPer)}%', (25, 430), cv2.FONT_HERSHEY_COMPLEX, 0.9, (209, 206, 0), 3)
+                cv2.rectangle(img, (30, 150), (55, 300), (209, 106, 0), 3)
+                cv2.rectangle(img, (30, int(volBar)), (55, 300), (215, 155, 127), cv2.FILLED)
+                cv2.putText(img, f'{int(volPer)}%', (25, 330), FONT, 0.9, (209, 206, 0), 3)
 
-    if mode == 'Cursor':
+    if mode == 'CURSOR':
         active = 1
         putText(mode)
         # 커서 박스 크기, 위치 조정
@@ -162,7 +164,7 @@ while True:
 
         if fingers != [0, 1, 0, 0, 0] and fingers != [0, 1, 1, 0, 0]:
             active = 0
-            mode = 'N'
+            mode = 'DEFAULT'
         else:  # 박스 끝으로 손가락이 움직이면 화면 끝으로 움직이도록 수정함
             if len(lmList) != 0:
                 x1, y1 = lmList[8][1], lmList[8][2]
@@ -190,6 +192,9 @@ while True:
                         autopy.mouse.move(X, Y)
                     else:
                         pyautogui.mouseUp()
+        
+    if mode == 'DEFAULT':
+        putText(mode)
                     
                     
     cv2.imshow('Hand LiveFeed',img)
@@ -197,6 +202,6 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    def putText(mode,loc = (250, 450), color = (0, 255, 255)):
-        cv2.putText(img, str(mode), loc, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                    3, color, 3)
+    def putText(mode,loc = (180, 450), color = (220, 198, 164)):
+        cv2.putText(img, str(mode), loc, FONT,
+                    2, color, 3)
