@@ -84,7 +84,7 @@ def find_max_area(contours):
 def get_finger_position(max_contour, img_result, debug):
     points1 = []
 
-    # STEP 6-1
+    # 6-1
     M = cv2.moments(max_contour)
 
     cx = int(M['m10'] / M['m00'])
@@ -97,12 +97,12 @@ def get_finger_position(max_contour, img_result, debug):
         if cy > point[0][1]:
             points1.append(tuple(point[0]))
 
-    if debug:
-        cv2.drawContours(img_result, [hull], 0, (0, 255, 0), 2)
-        for point in points1:
-            cv2.circle(img_result, tuple(point), 15, [0, 0, 0], -1)
+    # if debug:
+    #     cv2.drawContours(img_result, [hull], 0, (0, 255, 0), 2)
+    #     for point in points1:
+    #         cv2.circle(img_result, tuple(point), 15, [0, 0, 0], -1)
 
-    # STEP 6-2
+    # 6-2
     hull = cv2.convexHull(max_contour, returnPoints=False)
     defects = cv2.convexityDefects(max_contour, hull)
 
@@ -130,11 +130,11 @@ def get_finger_position(max_contour, img_result, debug):
         for point in points2:
             cv2.circle(img_result, tuple(point), 20, [0, 255, 0], 5)
 
-    # STEP 6-3
+    # 6-3
     points = points1 + points2
     points = list(set(points))
 
-    # STEP 6-4
+    # 6-4
     new_points = []
     for p0 in points:
 
@@ -233,7 +233,7 @@ while True:
     if ret == False:
         break
 
-    img_result = process(img, debug=False)
+    img_result = process(img, debug=True)
 
     key = cv2.waitKey(1)
     if key == 27:
