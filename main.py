@@ -145,13 +145,13 @@ while True:
                     if vol > 0:
                         vol = 0
                     putText(mode + ' UP', loc = (140, 450))
-
-                # 딱히 필요 없는 코드
-                volBar = np.interp(vol, [minVol, maxVol], [400, 150])
+                    
+                volBar = np.interp(vol, [minVol, maxVol], [300, 150])
                 volPer = np.interp(vol, [minVol, maxVol], [0, 100])
 
                 volume.SetMasterVolumeLevel(vol, None)
 
+                print(volBar)
                 cv2.rectangle(img, (30, 150), (55, 300), (209, 106, 0), 3)
                 cv2.rectangle(img, (30, int(volBar)), (55, 300), (215, 155, 127), cv2.FILLED)
                 cv2.putText(img, f'{int(volPer)}%', (25, 330), FONT, 0.9, (209, 206, 0), 3)
