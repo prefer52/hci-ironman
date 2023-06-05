@@ -102,7 +102,7 @@ while True:
       #  print(fingers)
         if (fingers == [0,0,0,0,0]) & (active == 0 ):
             mode='DEFAULT'
-        elif (fingers == [1, 1, 1, 1, 1]) & (active == 0):
+        elif (fingers == [1, 1, 1, 1, 1] or fingers == [1, 0, 0, 0, 0]) & (active == 0):
             mode = 'SCROLL'
             active = 1
         elif (fingers == [0, 1, 0, 0, 0] or fingers == [0, 1, 1, 0, 0]) & (active == 0):
